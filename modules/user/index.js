@@ -5,6 +5,7 @@ import * as _ from "lodash";
 // const UserTypes = require('./model')
 const rand = require("randomatic");
 import { User } from "./model";
+import { Person } from "../person/model";
 const mongoose = require('mongoose');
 mongoose.Promise = Promise;
 // const ObjectId = require('mongoose').Types.ObjectId;
