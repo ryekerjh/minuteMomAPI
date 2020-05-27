@@ -1,64 +1,61 @@
-import jwt from 'jsonwebtoken';
-import mongoose from 'mongoose';  
-import User from '../modules/user/model';
+import { User } from '../modules/user/model';
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const secret = process.env.JWT_SECRET;
 
-function sign(payload, secret){
-
-    const jwtToken = jwt.sign(payload, secret, {noTimestamp: true});
+async function sign(payload, tokenHash) {
+    const jwtToken = await jwt.sign(payload, tokenHash + secret, { noTimestamp: true });
     return jwtToken;
 }
 
-function verify(token){  
-    try{
-        return jwt.verify(token, secret);
-    } catch(err){
-        return null;
+function verify(token, userHash) {
+    try {
+        return jwt.verify(token, userHash + secret);
+    } catch (err) {
+        throw err;
     }
 }
 
-function protect(req, res, next) {
-    if(req) {          
-        if(!req.headers.authorization) {
-            res.status(401);
-            return res.json({error: 'Missing authorization header'});
-        } else if(req.headers.authorization) {
-            const user = verify(req.headers.authorization.split(' ')[1]);
-            if(!user) {
+async function protect(req, res, next) {
+    if (req) {
+        try {
+            const token = req.headers["x-access-token"],
+                json = !!token ? token.split(".")[1] : undefined,
+                decoded = JSON.parse(Buffer.from(json, "base64").toString("ascii")),
+                lookupUser = decoded.id ? await User.findById(decoded.id).select("+tokenHash") : null;
+            const userInHeaders = verify(token, lookupUser.tokenHash);
+            if (!userInHeaders) {
                 res.status(401);
-                return res.json({error: 'Invalid authorization header'});
+                return res.json({ error: 'Invalid authorization header' });
             }
-            User.findOne({_id: user._id})
-            .select('-password -__v')
-            .exec()
-            .then(user => {
-                req.current_user = user;
-                next();
-            })
-            .catch(err => {
-                console.log(err, 'error');
-            });
-        }
+            req.current_user = await User.findOne({ _id: userInHeaders.id })
+                .select('-__v')
+            next();
+        } catch (error) { next(error) }
     }
+    else throw new Error("No request sent")
 };
 
+/**
+ * TO be used for updateUser
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ */
 function stripRole(req, res, next) {
-    if(req.body) {
-        if(req.body.hasOwnProperty('role')) {
-            if(req.current_user !== 'superadmin') {
-                delete req.body.role;
-                next();
-            } else {
-                next();
-            }
+    if (req.body) {
+        if (req.body.hasOwnProperty('role') && req.current_user.role !== 'superadmin') {
+            delete req.body.role;
+            next();
+        } else {
+            next();
         }
-    }
+    } else throw new Error(`You must provide a payload`)
 };
 
-module.exports = {
-    sign: sign,
-    verify: verify,
-    protect: protect,
-    stripRole: stripRole
+export {
+    sign,
+    verify,
+    protect,
+    stripRole
 };
