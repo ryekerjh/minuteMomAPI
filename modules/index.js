@@ -1,5 +1,7 @@
-import { UsersModule } from './user';
-
+import { UserModule } from './user';
+import { ActivityModule } from "./activity";
+// import { NotificationModule } from "./notification";
+// import { PersonModule } from "./person";
 
 /**
  * 
@@ -10,9 +12,15 @@ import { UsersModule } from './user';
  */
 export class Modules {
     constructor() {
-        this.users = new UsersModule;
+        this.users = new UserModule;
+        this.activities = new ActivityModule;
+        // this.notifications = new NotificationModule;
+        // this.people = new PersonModule;
         this.moduleList = [
-            this.users
-            ];
+            this.users,
+            this.activities,
+            // this.notifications,
+            // this.people
+        ];
     }
 }
