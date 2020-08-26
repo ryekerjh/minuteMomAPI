@@ -4,7 +4,7 @@ const rand = require("randomatic");
 import { sign } from "../../helpers/jwt";
 import { Person } from "../person/model";
 const accountTypeEnum = ["paid", "free"];
-
+// Stuff
 const UserSchema = new mongoose.Schema({
     role: { type: String, enum: ['superadmin', 'admin', 'cityUser', 'user', 'propertyManager'], default: 'user' },
     email: { type: String, default: '', unique: true },
