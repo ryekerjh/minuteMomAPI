@@ -8,7 +8,7 @@
     "dev": "nodemon --exec babel-node index.js --presets es2015",
     "prestart": "babel src --out-dir dist",
     "start": "node dist/index.js",
-    "build": "babel src --out-dir dist && node dist/index.js"
+    "build": "npm install && babel src --out-dir dist && node dist/index.js"
   },
   "keywords": [],
   "author": "",
